@@ -33,3 +33,8 @@ button.danger { border-color:var(--bad); background:transparent; color:var(--bad
 #logs { list-style:none; margin:0; padding:0; max-height:360px; overflow:auto; font-family:ui-monospace, monospace; font-size:12px; }
 #logs li { padding:3px 0; border-bottom:1px solid var(--border); } #logs .warn { color:var(--warn); } #logs .error { color:var(--bad); }
 .orders-wrap { max-height:360px; overflow:auto; }
+.spacer { flex: 1; }
+.check { flex-direction:row; align-items:flex-start; gap:8px; color:var(--text); margin:6px 0; }
+.check input { margin-top:3px; }
+.danger-text { color:var(--bad); border-color:var(--bad); }
+.result { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px; white-space:pre-wrap; font-size:12px; margin-top:10px; }

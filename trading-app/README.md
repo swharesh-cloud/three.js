@@ -15,6 +15,30 @@ python -m uvicorn app.main:app --port 8000
 
 Open http://localhost:8000. Pick a strategy type, a symbol and its parameters, then click **Add strategy** and **Start**.
 
+## Mac app
+
+You can download a ready-made Mac app, so there's no need to install Python:
+
+1. On GitHub, open **Actions → Trading app (macOS build)** and pick the latest green run.
+2. Download **Liquid-Strategy-Trader-arm64** for Apple Silicon (M1 and later), or **-x86_64** for Intel Macs.
+3. Unzip it, open the `.dmg`, and drag **Liquid Strategy Trader** into Applications.
+4. The app isn't notarized by Apple. The first time you open it, **right-click the app → Open → Open**.
+
+To build it yourself on a Mac, run `bash desktop/build_mac.sh`. The `.dmg` ends up in `dist/`.
+
+The app keeps its settings, saved strategies and your own strategy files in
+`~/Library/Application Support/Liquid Strategy Trader/`. To add a strategy, put a `.py` file in its `strategies/` folder and click **Reload strategy files**.
+
+## Connecting your Liquid account
+
+1. In Liquid, create an API key. Give it read-only access to start, and add trading access later.
+2. In the app, click **Connect Liquid account**. Paste the key (and the secret, if Liquid gives you one), check the API address, then click **Save and reconnect**.
+3. Click **Test connection**. It fetches a price and your balances, and never places orders.
+4. Switch **Prices for paper trading** to **Real Liquid prices** to paper-trade on live prices.
+5. Only after that works, set **Trading mode** to **Live** and tick the confirmation box.
+
+The key is stored in the macOS Keychain (or the `.env` file, with owner-only permissions, where no keychain is available). It is only ever sent to the API address you entered. The app's server listens on `127.0.0.1` only, so other computers can't reach it.
+
 ## Adding strategies
 
 **From the UI:** choose any installed strategy type, fill in the parameters, then add it. You can run several instances of the same type on different symbols or with different settings. Each instance tracks its own position and P&L, and can be stopped, edited, flattened or deleted.
