@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liquid Strategy Trader</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <h1>Liquid Strategy Trader</h1>
+  <span id="mode" class="badge">…</span>
+  <span id="halted" class="badge danger" hidden>HALTED</span>
+</header>
+<div id="warning" class="banner" hidden></div>
+
+<main>
+  <section class="cards" id="account"></section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Strategies</h2>
+      <button id="reload" class="ghost" title="Re-scan user_strategies/ for new files">Reload strategy files</button>
+    </div>
+    <div class="table-wrap">
+    <table id="strategies">
+      <thead><tr><th>Name</th><th>Symbol</th><th>Status</th><th>Price</th><th>Position</th><th>PnL</th><th>Indicators</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+    <p id="empty" class="muted">No strategies yet. Add one below.</p>
+  </section>
+
+  <section class="panel">
+    <h2 id="form-title">Add strategy</h2>
+    <form id="add-form">
+      <div class="grid">
+        <label>Strategy type<select id="type" required></select></label>
+        <label>Symbol<input id="symbol" value="BTC-USD" required></label>
+        <label>Tick interval (s)<input id="interval" type="number" step="0.1" min="0.2" value="5"></label>
+        <label>Label<input id="label" placeholder="optional"></label>
+      </div>
+      <p id="type-desc" class="muted"></p>
+      <div class="grid" id="params"></div>
+      <div class="actions">
+        <button type="submit" id="submit">Add strategy</button>
+        <button type="button" id="cancel-edit" class="ghost" hidden>Cancel edit</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="two-col">
+    <div class="panel">
+      <h2>Orders</h2>
+      <div class="table-wrap orders-wrap"><table id="orders"><thead><tr><th>Time</th><th>Strategy</th><th>Side</th><th>Qty</th><th>Fill</th><th>Status</th><th>Note</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="panel">
+      <h2>Log</h2>
+      <ul id="logs"></ul>
+    </div>
+  </section>
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>
