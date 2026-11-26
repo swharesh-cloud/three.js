@@ -139,5 +139,49 @@ async function refresh() {
   } catch (err) { console.error(err); }
 }
 
+// ---------- Liquid account ----------
+async function loadSettings() {
+  const s = await api("/api/settings");
+  $("#s-base").value = s.liquid_api_base; $("#s-endpoints").value = s.endpoints_file || "";
+  $("#s-market").value = s.market_data; $("#s-mode").value = s.trading_mode; $("#s-live-confirm").checked = s.live_confirmed;
+  $("#s-max-order").value = s.max_order_notional; $("#s-max-pos").value = s.max_position_notional; $("#s-max-loss").value = s.max_daily_loss;
+  $("#s-key").value = $("#s-secret").value = "";
+  $("#key-storage").textContent = s.key_storage;
+  $("#key-status").textContent = `API key: ${s.api_key || "not saved"}. API secret: ${s.api_secret || "not saved"}.`;
+  $("#live-confirm-row").hidden = $("#s-mode").value !== "live";
+  $("#open-account").textContent = s.api_key ? "Liquid account · connected" : "Connect Liquid account";
+}
+$("#s-mode").addEventListener("change", () => ($("#live-confirm-row").hidden = $("#s-mode").value !== "live"));
+$("#open-account").addEventListener("click", () => { $("#account-panel").hidden = false; loadSettings(); $("#account-panel").scrollIntoView({ behavior: "smooth" }); });
+$("#close-account").addEventListener("click", () => ($("#account-panel").hidden = true));
+$("#account-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const live = $("#s-mode").value === "live";
+  if (live && !$("#s-live-confirm").checked) return alert("Tick the box to confirm live trading, or choose paper mode.");
+  try {
+    await api("/api/settings", { method: "POST", body: JSON.stringify({
+      liquid_api_base: $("#s-base").value, api_key: $("#s-key").value || null, api_secret: $("#s-secret").value || null,
+      endpoints_file: $("#s-endpoints").value, market_data: $("#s-market").value, trading_mode: $("#s-mode").value,
+      live_confirmed: $("#s-live-confirm").checked, max_order_notional: +$("#s-max-order").value,
+      max_position_notional: +$("#s-max-pos").value, max_daily_loss: +$("#s-max-loss").value }) });
+    await loadSettings(); refresh();
+    $("#test-result").hidden = false; $("#test-result").textContent = "Saved. The app reconnected with the new settings.";
+  } catch (err) { alert(err.message); }
+});
+$("#test-conn").addEventListener("click", async () => {
+  $("#test-result").hidden = false; $("#test-result").textContent = "Testing… (no orders are placed)";
+  const r = await api("/api/settings/test", { method: "POST" }).catch((e) => ({ error: e.message }));
+  if (r.error) return ($("#test-result").textContent = r.error);
+  $("#test-result").textContent =
+    (r.price.ok ? `✓ Price check: ${r.price.symbol} = ${r.price.value}` : `✗ Price check failed: ${r.price.error}`) + "\n" +
+    (r.account.ok ? `✓ Account check: ${r.account.preview}` : `✗ Account check failed: ${r.account.error}`);
+});
+$("#remove-key").addEventListener("click", async () => {
+  if (!confirm("Remove the saved Liquid API key and secret from this computer?")) return;
+  await api("/api/settings", { method: "POST", body: JSON.stringify({ api_key: "-", api_secret: "-", trading_mode: "paper" }) });
+  await loadSettings(); refresh();
+});
+
 loadTypes().then(refresh);
+loadSettings().catch(() => {});
 setInterval(refresh, 2000);

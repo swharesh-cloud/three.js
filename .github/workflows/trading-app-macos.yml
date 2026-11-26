@@ -1,0 +1,63 @@
+name: Trading app (macOS build)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [dev]
+    paths:
+      - "trading-app/**"
+      - ".github/workflows/trading-app-macos.yml"
+  pull_request:
+    paths:
+      - "trading-app/**"
+      - ".github/workflows/trading-app-macos.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trading-app-macos-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest      # Apple Silicon (arm64)
+            arch: arm64
+          - runner: macos-15-intel    # Intel (x86_64)
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: trading-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run tests
+        run: |
+          pip install -r requirements.txt
+          python -m pytest -q
+      - name: Build app and disk image
+        run: bash desktop/build_mac.sh
+      - name: Smoke test the built app
+        run: |
+          "dist/Liquid Strategy Trader.app/Contents/MacOS/Liquid Strategy Trader" --headless &
+          for i in $(seq 1 60); do
+            grep -o 'http://127.0.0.1:[0-9]*' ~/Library/Application\ Support/Liquid\ Strategy\ Trader/app.log && break
+            sleep 1
+          done
+          URL=$(grep -o 'http://127.0.0.1:[0-9]*' ~/Library/Application\ Support/Liquid\ Strategy\ Trader/app.log | tail -1)
+          curl -sf "$URL/api/status"
+          curl -sf "$URL/api/strategy-types" | grep -q "SMA crossover"
+          kill %1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Liquid-Strategy-Trader-${{ matrix.arch }}
+          path: trading-app/dist/*.dmg
+          if-no-files-found: error

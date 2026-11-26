@@ -4,13 +4,15 @@ from __future__ import annotations
 import importlib
 import importlib.util
 import inspect
+import os
 import sys
 from pathlib import Path
 
 from . import builtin
 from .base import Strategy
 
-USER_DIR = Path(__file__).resolve().parent.parent.parent / "user_strategies"
+USER_DIR = Path(os.environ.get("USER_STRATEGIES_DIR",
+                            Path(__file__).resolve().parent.parent.parent / "user_strategies"))
 
 
 def _collect(module) -> dict[str, type[Strategy]]:
@@ -21,7 +23,8 @@ def _collect(module) -> dict[str, type[Strategy]]:
     return found
 
 
-def discover(user_dir: Path = USER_DIR) -> tuple[dict[str, type[Strategy]], list[str]]:
+def discover(user_dir: Path | None = None) -> tuple[dict[str, type[Strategy]], list[str]]:
+    user_dir = Path(user_dir or USER_DIR)
     registry = _collect(builtin)
     errors = []
     for path in sorted(user_dir.glob("*.py")):
