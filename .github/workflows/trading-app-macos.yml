@@ -3,6 +3,7 @@ name: Trading app (macOS build)
 on:
   workflow_dispatch:
   push:
+    branches: [dev]
     paths:
       - "trading-app/**"
       - ".github/workflows/trading-app-macos.yml"
@@ -14,14 +15,22 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: trading-app-macos-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - runner: macos-14   # Apple Silicon (arm64)
-          - runner: macos-13   # Intel (x86_64)
+          - runner: macos-latest      # Apple Silicon (arm64)
+            arch: arm64
+          - runner: macos-15-intel    # Intel (x86_64)
+            arch: x86_64
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: trading-app
@@ -49,6 +58,6 @@ jobs:
           kill %1
       - uses: actions/upload-artifact@v4
         with:
-          name: Liquid-Strategy-Trader-${{ matrix.runner == 'macos-14' && 'arm64' || 'x86_64' }}
+          name: Liquid-Strategy-Trader-${{ matrix.arch }}
           path: trading-app/dist/*.dmg
           if-no-files-found: error
